@@ -22,7 +22,7 @@ span {
 }
 
 .selecting {
-  background-color: grey;
+  font-weight: bold;
 }
 
 .hidden {

@@ -39,9 +39,12 @@ function expand(lineId, number) {
 
 function createEllipsisNode(line) {
   let ellipsisLine = line.cloneNode(true);
+  console.log(ellipsisLine);
   ellipsisLine.firstChild.classList.remove("selecting");
-  ellipsisLine.querySelector(".lineNumber span").innerText = "..."; // <span1>
-  ellipsisLine.querySelector(".code span").innerText = ""; // <span2>
+  ellipsisLine
+    .querySelector(".hljs-ln-numbers div")
+    .setAttribute("data-line-number", "..."); // <span1>
+  ellipsisLine.querySelector(".hljs-ln-code").innerText = ""; // <span2>
   ellipsisLine.addEventListener("click", () => {
     const info = selectedInfo.find(
       (item) => `L${item.start}` === ellipsisLine.id
@@ -58,55 +61,47 @@ function createEllipsisNode(line) {
   return ellipsisLine;
 }
 
-codeLines.map((item, index) => {
-  const tr = document.createElement("tr");
-  tr.id = "L" + String(index + 1);
-  const td1 = document.createElement("td");
-  td1.className = "lineNumber";
-  const span = document.createElement("span");
-  span.innerText = String(index + 1);
-  const td2 = document.createElement("td");
-  const span2 = document.createElement("span");
-  span2.innerText = item;
-  td1.appendChild(span);
-  td2.appendChild(span2);
-  td2.className = "code";
-  tr.appendChild(td1);
-  tr.appendChild(td2);
-  code.appendChild(tr);
-  td1.addEventListener("click", (event) => {
-    const number = parseInt(td1.firstElementChild.innerText);
-    const numbers = document.querySelectorAll(".lineNumber");
-    if (!lineSelected) {
-      start = number;
-      Array.from(numbers).map((number) => {
-        number.classList.add("selecting");
-      });
-    } else {
-      end = number;
-      let numberLinesSelected = Math.abs(start - end) + 1;
-      start = Math.min(start, end);
-      selectedInfo = selectedInfo.filter((item) => {
-        const contained =
-          start < item.start && start + numberLinesSelected - 1 > item.start;
-        if (contained) {
-          expand(`L${String(item.start)}`, item.number);
-        }
-        return !contained;
-      });
-      console.log(selectedInfo);
-      selectedInfo.push({ start: start, number: numberLinesSelected });
-      let line = document.querySelector(`#L${start}`);
-      createEllipsisNode(line);
+window.addEventListener("load", function () {
+  const numbers = document.querySelectorAll(".hljs-ln-numbers");
+  Array.from(numbers).map((item, index) => {
+    const number = parseInt(item.getAttribute("data-line-number"));
+    item.parentElement.id = `L${number}`;
+    item.addEventListener("click", (event) => {
+      console.log(number);
+      if (!lineSelected) {
+        start = number;
+        // Array.from(numbers).map((number) => {
+        //   number.classList.add("selecting");
+        // });
+        item.classList.add("selecting");
+      } else {
+        end = number;
+        let numberLinesSelected = Math.abs(start - end) + 1;
+        start = Math.min(start, end);
+        selectedInfo = selectedInfo.filter((item) => {
+          const contained =
+            start < item.start && start + numberLinesSelected - 1 > item.start;
+          if (contained) {
+            expand(`L${String(item.start)}`, item.number);
+          }
+          return !contained;
+        });
 
-      for (let i = 0; i < numberLinesSelected; i++) {
-        line.classList.add("hidden");
-        line = line.nextElementSibling;
+        selectedInfo.push({ start: start, number: numberLinesSelected });
+        console.log(selectedInfo);
+        let line = document.querySelector(`#L${start}`);
+        console.log(line);
+        createEllipsisNode(line);
+
+        for (let i = 0; i < numberLinesSelected; i++) {
+          line.classList.add("hidden");
+          line = line.nextElementSibling;
+        }
+        Array.from(numbers).map((number) => {
+          number.classList.remove("selecting");
+        });
       }
-      Array.from(numbers).map((number) => {
-        number.classList.remove("selecting");
-      });
-    }
-    lineSelected = !lineSelected;
+      lineSelected = !lineSelected;
+    });
   });
 });
