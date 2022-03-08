@@ -1,0 +1,30 @@
+* {
+  box-sizing: border-box;
+}
+
+ul {
+  list-style: none;
+}
+
+span {
+  margin-right: 10px;
+}
+
+.lineNumber {
+  font-weight: bold;
+}
+
+.box {
+  padding: 20px;
+  width: 800px;
+  border: solid 1px;
+  border-radius: 20px;
+}
+
+.selecting {
+  background-color: grey;
+}
+
+.hidden {
+  display: none;
+}
