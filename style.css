@@ -6,10 +6,6 @@ ul {
   list-style: none;
 }
 
-span {
-  margin-right: 10px;
-}
-
 .lineNumber {
   font-weight: bold;
 }
