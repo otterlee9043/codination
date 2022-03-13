@@ -106,11 +106,23 @@ window.addEventListener("load", function () {
   });
 });
 
+function splitElement() {}
+
 function selectText() {
   var selectionText = "";
+  let selection;
   if (document.getSelection) {
+    console.log("1");
     selectionText = document.getSelection();
+    selection = document.getSelection();
+    const selectedString = selectionText.toString().split(/=| |\./);
+    console.log(selectionText);
+
+    const start = selection.anchorNode.parentElement;
+    splitElement(start, startWord);
+    const end = selection.focusNode.parentElement;
   } else if (document.selection) {
+    console.log("2");
     selectionText = document.selection.createRange().text;
   }
   return selectionText;
@@ -119,7 +131,7 @@ function selectText() {
 window.addEventListener(
   "mouseup",
   (event) => {
-    console.log(event.toElement.parentElement.innerText);
+    console.log(event.toElement);
     const selectedString = selectText().toString();
     const selectedLines = selectedString.split("\n");
     console.log(selectedLines);
@@ -127,3 +139,5 @@ window.addEventListener(
   },
   false
 );
+
+//reg, str.split(/=| |\./)
