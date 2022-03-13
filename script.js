@@ -106,10 +106,65 @@ window.addEventListener("load", function () {
   });
 });
 
+function splitText(textNode, text, start) {
+  const fullText = textNode.nodeValue;
+  console.log(fullText);
+  const span1 = document.createElement("span");
+  const span2 = document.createElement("span");
+  const index = fullText.indexOf(text);
+  if (start) {
+    span1.innerText = fullText.substring(0, index);
+    span2.innerText = text;
+    // console.log(fullText.substring(0, index));
+    // console.log(text);
+  } else {
+    span1.innerText = text;
+    span2.innerText = fullText.substring(index, fullText.length - 1);
+    // console.log(text);
+    // console.log(fullText.substring(index, fullText.length - 1));
+  }
+  textNode.before(span1);
+  textNode.before(span2);
+  textNode.remove();
+}
+
+function splitSpan(spanNode, text, start) {}
+
 function selectText() {
-  var selectionText = "";
+  var selectionText;
   if (document.getSelection) {
     selectionText = document.getSelection();
+    console.log(selectionText);
+    const selectedString = selectionText.toString();
+    const start = selectionText.anchorNode.parentElement;
+    const end = selectionText.focusNode.parentElement;
+    const startNode = selectionText.anchorNode;
+    const endNode = selectionText.focusNode;
+
+    const overlappedString = findOverlap(
+      startNode.nodeValue,
+      selectedString,
+      selectedString,
+      false
+    );
+    //console.log(overlappedString);
+    //console.log(selectionText.anchorNode.parentElement.tagName);
+    if (selectionText.anchorNode.parentElement.tagName === "TD") {
+      // text
+      if (startNode !== endNode) splitText(startNode, overlappedString, true);
+    }
+
+    // console.log(startNode.nodeValue, ;
+
+    console.log(startNode);
+    //console.log(span);
+    //startNode.before(span);
+    // startNode.remove();
+
+    // console.log(end);
+    console.log(endNode);
+    // const words = selectionText.toString().split(/=\(\) /);
+    // console.log(words);
   } else if (document.selection) {
     selectionText = document.selection.createRange().text;
   }
@@ -119,11 +174,31 @@ function selectText() {
 window.addEventListener(
   "mouseup",
   (event) => {
-    console.log(event.toElement.parentElement.innerText);
+    //console.log(event.toElement.parentElement.innerText);
     const selectedString = selectText().toString();
     const selectedLines = selectedString.split("\n");
-    console.log(selectedLines);
+    //console.log(selectedLines);
     // console.log();
   },
   false
 );
+
+function findOverlap(a, b, originalB, reverse) {
+  if (!originalB) {
+    originalB = b;
+  }
+  if (b.length === 0 && !reverse) {
+    return findOverlap(a, originalB, originalB, true);
+  }
+  if (a.endsWith(b)) {
+    return b;
+  }
+  if (a.indexOf(b) >= 0) {
+    return b;
+  }
+  if (!reverse) {
+    return findOverlap(a, b.substring(0, b.length - 1), originalB, false);
+  } else {
+    return findOverlap(a, b.substring(1, b.length), originalB, true);
+  }
+}
