@@ -24,3 +24,11 @@ ul {
 .hidden {
   display: none;
 }
+
+.bg {
+  background-color: tomato;
+}
+
+.shown {
+  display: inline;
+}

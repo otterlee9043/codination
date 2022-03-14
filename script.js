@@ -15,12 +15,17 @@ function readTextFile(file) {
 
 const codeText = readTextFile("./example.js");
 const codeLines = codeText.split("\n");
-const code = document.querySelector("#code");
+const code = document.querySelector("code");
 let lineSelected = false;
 let start = -1;
 let end = -1;
 let selectedInfo = [];
 const tbody = document.querySelector("tbody");
+
+function isString(inputText) {
+  if (typeof inputText === "string" || inputText instanceof String) return true;
+  else return false;
+}
 
 function compare(a, b) {
   const num1 = parseInt(a.querySelector(".lineNumber span").innerText);
@@ -106,38 +111,257 @@ window.addEventListener("load", function () {
   });
 });
 
-function splitElement() {}
+code.addEventListener("mouseup", selectText, false);
+
+function splitText(textNode, text, start, same = false) {
+  const fullText = textNode.nodeValue;
+  // console.log(fullText);
+  // console.log(text);
+  const span1 = document.createElement("span");
+  const span2 = document.createElement("span");
+  let span3;
+  const index = fullText.indexOf(text);
+  let between = false;
+  if (same) {
+    if (fullText === text) {
+      span1.innerText = text;
+      textNode.before(span1);
+      textNode.remove();
+      return span1;
+    }
+    if (index === 0) {
+      span1.innerText = text;
+      span2.innerText = fullText.substring(text.length, fullText.length);
+    } else if (index === fullText.length - text.length) {
+      span1.innerText = fullText.substring(0, index);
+      span2.innerText = text;
+    } else {
+      span3 = document.createElement("span");
+      span1.innerText = fullText.substring(0, index);
+      span2.innerText = text;
+      span3.innerText = fullText.substring(
+        index + text.length,
+        fullText.length
+      );
+      between = !between;
+    }
+  } else {
+    if (start) {
+      span1.innerText = fullText.substring(0, index);
+      span2.innerText = text;
+    } else {
+      span1.innerText = text;
+      span2.innerText = fullText.substring(text.length, fullText.length);
+    }
+  }
+
+  textNode.before(span1);
+  textNode.before(span2);
+  if (between) {
+    textNode.before(span3);
+    textNode.remove();
+    console.log(span1, span2, span3);
+    return span2;
+  }
+  textNode.remove();
+  return start ? span2 : span1;
+}
+
+function splitSpan(span, text, start, same = false) {
+  console.log(span);
+  const fullText = span.innerText;
+  const span2 = span.cloneNode(false);
+  let span3;
+  const index = fullText.indexOf(text);
+  let between = false;
+  if (same) {
+    if (fullText === text) {
+      return span;
+    }
+    span.after(span2);
+    if (index === 0) {
+      span.innerText = text;
+      span2.innerText = fullText.substring(text.length, fullText.length);
+    } else if (index === fullText.length - text.length) {
+      span.innerText = fullText.substring(0, index);
+      span2.innerText = text;
+    } else {
+      span3 = span.cloneNode(false);
+      span.innerText = fullText.substring(0, index);
+      span2.innerText = text;
+      span3.innerText = fullText.substring(
+        index + text.length,
+        fullText.length
+      );
+      between = !between;
+      span2.after(span3);
+      return span2;
+    }
+  } else {
+    span.after(span2);
+    if (start) {
+      //const span2 = spane.cloneNode("span");
+      span.innerText = fullText.substring(0, index);
+      span2.innerText = text;
+      console.log(span.innerText);
+      console.log(span2.innerText);
+    } else {
+      span.innerText = text;
+      span2.innerText = fullText.substring(text.length, fullText.length);
+    }
+  }
+
+  console.log("span >", span);
+  console.log("span2 >", span2);
+  return start ? span2 : span;
+}
+
+function ellipsisSpan(startNode, endNode) {
+  const ellipsisButton = document.createElement("span");
+  ellipsisButton.innerText = "...";
+  ellipsisButton.addEventListener("click", () => {
+    newSpan.classList.remove("hidden");
+    ellipsisButton.remove();
+  });
+
+  const newSpan = document.createElement("span");
+  newSpan.classList.add("hidden");
+
+  const key = startNode.id;
+  let node = startNode;
+  let nextNode = startNode.nextSibling;
+
+  startNode.before(newSpan);
+  newSpan.appendChild(node);
+  if (endNode) {
+    while (1) {
+      node = nextNode;
+      console.log(node);
+      if (node.nodeType === 1 && node.id === key) {
+        newSpan.appendChild(node);
+
+        break;
+      }
+      nextNode = node.nextSibling;
+      //console.log(i, node, node.id, node.nodeType);
+      newSpan.appendChild(node);
+    }
+  }
+
+  newSpan.before(ellipsisButton);
+}
+
+function randomId() {
+  return Math.random().toString(12).substring(2, 11);
+}
 
 function selectText() {
-  var selectionText = "";
-  let selection;
+  var selectionText;
   if (document.getSelection) {
-    console.log("1");
     selectionText = document.getSelection();
-    selection = document.getSelection();
-    const selectedString = selectionText.toString().split(/=| |\./);
-    console.log(selectionText);
+    if (selectionText.toString() === "") {
+      return;
+    }
+    console.log(selectionText.toString());
+    const selectedString = selectionText.toString();
 
-    const start = selection.anchorNode.parentElement;
-    splitElement(start, startWord);
-    const end = selection.focusNode.parentElement;
+    const selectedFirst = selectionText.anchorNode;
+    const selectedLast = selectionText.focusNode;
+    console.log("selectedFirst >", selectedFirst);
+    if (
+      !isString(selectedFirst.nodeValue) ||
+      !isString(selectedLast.nodeValue)
+    ) {
+      console.log("NOT STRING!!");
+      return;
+    }
+    const firstOverlappedString = findOverlap(
+      selectedFirst.nodeValue,
+      selectedString,
+      selectedString,
+      false
+    );
+    console.log("selectedLast >", selectedLast);
+    const lastOverlappedString = findOverlap(
+      selectedString,
+      selectedLast.nodeValue,
+      selectedLast.nodeValue,
+      false
+    );
+    console.log("firstOverlappedString >", firstOverlappedString);
+    console.log("lastOverlappedString >", lastOverlappedString);
+    let startNode, endNode;
+    const key = randomId();
+    const anchorTagType = selectionText.anchorNode.parentElement.tagName;
+    const focusTagType = selectionText.focusNode.parentElement.tagName;
+    if (selectedFirst === selectedLast) {
+      console.log("SAME!");
+      if (anchorTagType === "TD") {
+        startNode = splitText(selectedFirst, firstOverlappedString, true, true);
+      } else {
+        startNode = splitSpan(
+          selectedFirst.parentElement,
+          firstOverlappedString,
+          true,
+          true
+        );
+      }
+      ellipsisSpan(startNode, null, true);
+    } else {
+      if (anchorTagType === "TD") {
+        startNode = splitText(selectedFirst, firstOverlappedString, true);
+        console.log("startNode >", startNode);
+      } else if (anchorTagType === "SPAN") {
+        startNode = splitSpan(
+          selectedFirst.parentElement,
+          firstOverlappedString,
+          true
+        );
+        console.log("startNode >>", startNode);
+      }
+
+      if (focusTagType === "TD") {
+        // text
+        if (selectedFirst !== selectedLast) {
+          endNode = splitText(selectedLast, lastOverlappedString, false);
+        }
+        console.log("endNode >", endNode);
+      } else if (focusTagType === "SPAN") {
+        endNode = splitSpan(
+          selectedLast.parentElement,
+          lastOverlappedString,
+          false
+        );
+        console.log("endNode >>", endNode);
+      }
+
+      startNode.id = key;
+      endNode.id = key;
+      ellipsisSpan(startNode, endNode, false);
+    }
   } else if (document.selection) {
     console.log("2");
     selectionText = document.selection.createRange().text;
   }
-  return selectionText;
+  selectionText.removeAllRanges();
 }
 
-window.addEventListener(
-  "mouseup",
-  (event) => {
-    console.log(event.toElement);
-    const selectedString = selectText().toString();
-    const selectedLines = selectedString.split("\n");
-    console.log(selectedLines);
-    // console.log();
-  },
-  false
-);
-
-//reg, str.split(/=| |\./)
+function findOverlap(a, b, originalB, reverse) {
+  if (!originalB) {
+    originalB = b;
+  }
+  if (b.length === 0 && !reverse) {
+    return findOverlap(a, originalB, originalB, true);
+  }
+  if (a.endsWith(b)) {
+    return b;
+  }
+  if (a.indexOf(b) >= 0) {
+    return b;
+  }
+  if (!reverse) {
+    return findOverlap(a, b.substring(0, b.length - 1), originalB, false);
+  } else {
+    return findOverlap(a, b.substring(1, b.length), originalB, true);
+  }
+}
